@@ -20,23 +20,43 @@ app.add_middleware(
 def root():
     return {"message": "Email Processing API Running"}
 
+# @app.get("/process-email")
+# def process_email():
+#     email = get_latest_email()
+#     if not email:
+#         return {"error": "No emails found"}
+
+#     # Call NLP processing to analyze email
+#     processed_results = process_email_content(email["body"])
+
+#     return {
+#         "subject": email["subject"] or "No Subject",
+#         "from": email["from"] or "Unknown Sender",
+#         "body": email["body"] or "No Email Body Found",
+#         "sentiment": processed_results["sentiment"],
+#         "summary": processed_results["summary"],
+#         "reply": processed_results["reply"]
+#     }
+
 @app.get("/process-email")
 def process_email():
     email = get_latest_email()
     if not email:
-        return {"error": "No emails found"}
+        raise HTTPException(status_code=404, detail="No emails found")
 
     # Call NLP processing to analyze email
-    processed_results = process_email_content(email["body"])
+    processed_results = process_email_content(email.get("body", ""))
 
     return {
-        "subject": email["subject"] or "No Subject",
-        "from": email["from"] or "Unknown Sender",
-        "body": email["body"] or "No Email Body Found",
+        "subject": email.get("subject", "No Subject"),
+        "from": email.get("from", "Unknown Sender"),
+        "body": email.get("body", "No Email Body Found"),
         "sentiment": processed_results["sentiment"],
         "summary": processed_results["summary"],
+        "rouge_scores": processed_results["rouge_scores"],  # Display ROUGE scores
         "reply": processed_results["reply"]
     }
+
     
 @app.post("/send-reply")
 def send_reply():
